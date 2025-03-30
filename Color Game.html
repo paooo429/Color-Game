@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color Guessing Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        #colorDisplay {
+            width: 300px; /* Increased width */
+            height: 150px; /* Increased height */
+            margin: 30px auto; /* Adjusted margin */
+            border: 4px solid black; /* Thicker border */
+        }
+        .btn {
+            display: inline-block;
+            padding: 15px; /* Increased padding */
+            margin: 10px; /* Increased margin */
+            cursor: pointer;
+            border: none;
+            font-size: 22px; /* Larger font size */
+            border-radius: 8px; /* Added rounded corners */
+        }
+        #message, #score, #multiplier, #timer {
+            font-size: 20px; /* Increased font size for better visibility */
+        }
+        .button {
+            display: inline-block;
+            margin-top: 40px; /* Space above the button */
+            padding: 10px 20px;
+            font-size: 16px;
+            color: white;
+            background-color: #007BFF; /* Blue button color */
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none; /* Remove underline for links styled as buttons */
+        }
+        .button:hover {
+            background-color: #0056b3; /* Darker blue on hover */
+        }
+    </style>
+</head>
+<body>
+    <h1>Guess the Color!</h1>
+    <div id="colorDisplay"></div>
+    <div id="buttons"></div>
+    <p id="message"></p>
+    <p>Score: <span id="score">0</span></p>
+    <p>Multiplier: <span id="multiplier">1x</span></p>
+    <p>Time Left: <span id="timer">10</span>s</p>
+
+    <!-- Audio elements for sounds -->
+    <audio id="correctSound" src="correct.mp3"></audio>
+    <audio id="wrongSound" src="wrong.mp3"></audio>
+    <audio id="gameOverSound" src="gameover.mp3"></audio>
+
+    <!-- Button to go to the Members page -->
+    <a href="Main.html" class="button">Home</a>
+
+    <script>
+        // Initialize game variables
+        let correctColor;
+        let score = 0;
+        let colorCount = 4;
+        let consecutiveCorrect = 0;
+        let multiplier = 1;
+        let timer;
+        let timeLeft = 10;
+        
+        // Function to generate a random color
+        function generateColor() {
+            return `rgb(${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)})`;
+        }
+        
+        // Function to start the countdown timer with dynamic time based on multiplier
+        function startTimer() {
+            clearInterval(timer);
+            timeLeft = multiplier >= 4 ? 4 : multiplier >= 3 ? 6 : multiplier === 2 ? 8 : 10;
+            document.getElementById('timer').textContent = timeLeft;
+            timer = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timer').textContent = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    gameOver();
+                }
+            }, 1000);
+        }
+        
+        // Function to set up a new round
+        function setGame() {
+            document.getElementById('message').textContent = '';
+            let colors = Array.from({ length: colorCount }, generateColor);
+            correctColor = colors[Math.floor(Math.random() * colors.length)];
+            document.getElementById('colorDisplay').style.backgroundColor = correctColor;
+            let buttonsDiv = document.getElementById('buttons');
+            buttonsDiv.innerHTML = '';
+            colors.forEach(color => {
+                let button = document.createElement('button');
+                button.className = 'btn';
+                button.style.backgroundColor = color;
+                button.onclick = () => checkAnswer(color);
+                buttonsDiv.appendChild(button);
+            });
+            startTimer();
+        }
+        
+        // Function to check the player's answer
+        function checkAnswer(color) {
+            if (color === correctColor) {
+                document.getElementById('message').textContent = 'Correct!';
+                document.getElementById('correctSound').play(); // Play correct sound
+                consecutiveCorrect++;
+                
+                // Increase multiplier every 5 correct answers in a row
+                if (consecutiveCorrect % 5 === 0) {
+                    multiplier++;
+                }
+                
+                // Increase score based on multiplier
+                score += (1 * multiplier);
+                document.getElementById('score').textContent = score;
+                document.getElementById('multiplier').textContent = multiplier + 'x';
+                
+                // Increase difficulty every 20 points by adding more colors
+                if (score % 20 === 0) {
+                    colorCount += 1; 
+                }
+            } else {
+                document.getElementById('message').textContent = 'Try Again!';
+                document.getElementById('wrongSound').play(); // Play wrong sound
+                gameOver();
+            }
+            setTimeout(setGame, 1000);
+        }
+        
+        // Function to handle game over scenario
+        function gameOver() {
+            document.getElementById('message').textContent = 'Game Over!';
+            document.getElementById('gameOverSound').play(); // Play game over sound
+            score = 0;
+            consecutiveCorrect = 0;
+            multiplier = 1;
+            document.getElementById('score').textContent = score;
+            document.getElementById('multiplier').textContent = multiplier + 'x';
+            clearInterval(timer);
+        }
+        
+        // Start the game
+        setGame();
+    </script>
+</body>
+</html>
